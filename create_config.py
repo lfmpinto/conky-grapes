@@ -32,7 +32,7 @@ import logging as log
 
 # Inittiating variables
 home = expanduser("~")
-working_dir = home+'/conky/conky-grapes/'
+working_dir = home+'/conky-grapes/'
 src_lua = working_dir+'rings-v2_tpl'
 dest_lua = working_dir+'rings-v2_gen.lua'
 src_conky = working_dir+'conky_tpl'
@@ -186,15 +186,15 @@ def route_interface():
 def disk_select():
     """ Return the mount point to monitor
     """
-    disks = []
-    with open('/proc/mounts') as f:
-        for line in f:
-            diskinfo = line.split(' ')
-            match1 = re.search(r'^/[a-zA-Z-_]+.', diskinfo[0], re.M | re.I)
-            match2 = re.search(r'^(fuse|bind|nfs|tmpfs)', diskinfo[2], re.M | re.I)
-            if match1 and not match2:
-                disks.append(diskinfo[1])
-    disks.sort()
+    disks = ['/', '/home', '/tmp']
+#    with open('/proc/mounts') as f:
+#        for line in f:
+#            diskinfo = line.split(' ')
+#            match1 = re.search(r'^/[a-zA-Z-_]+.', diskinfo[0], re.M | re.I)
+#            match2 = re.search(r'^(fuse|bind|nfs|tmpfs)', diskinfo[2], re.M | re.I)
+#            if match1 and not match2:
+#                disks.append(diskinfo[1])
+#    disks.sort()
 
     if len(disks) > 3:
         diskKeep = disks[:3]
@@ -499,18 +499,18 @@ def write_diskioconf_conky():
 
     # top io wait processes
     # First line, fixed vertical alignment
-    new_block = "${voffset -130}${goto 378}${font}${color1}${top_io name 1}${alignr 30}${top_io io_write 1}%\n"
+    new_block = "${voffset -130}${goto 378}${font}${color1}${top_io name 1}${alignr 30}${top_io io_write 1}\n"
     ioconf.append(new_block)
 
     for cpt in range (2,4):
         data = { 'voffset': voffset, 'io': "{}".format(cpt)}
-        new_block = "${{goto 378}}${{voffset {voffset}}}${{color1}}${{top_io name {io}}}${{alignr 30}}${{top_io io_write {io}}}%\n".format(**data)
+        new_block = "${{goto 378}}${{voffset {voffset}}}${{color1}}${{top_io name {io}}}${{alignr 30}}${{top_io io_write {io}}}\n".format(**data)
         ioconf.append(new_block)
 
     if old:
-        new_block = "${goto 370}${voffset 8}${color1}disk writes${alignr 30}${diskio_write}%\n${goto 370}${color1}disk reads${alignr 30}${diskio_read}%\n${font Michroma:size=10}${color0}${goto 418}${voffset 2}IO WAIT"
+        new_block = "${goto 370}${voffset 8}${color1}disk writes${alignr 30}${diskio_write}\n${goto 370}${color1}disk reads${alignr 30}${diskio_read}\n${font Michroma:size=10}${color0}${goto 418}${voffset 2}DISK IO"
     else:
-        new_block = "${goto 370}${voffset 4}${color1}disk writes${alignr 30}${diskio_write}%\n${goto 370}${color1}disk reads${alignr 30}${diskio_read}%\n${font Michroma:size=10}${color0}${goto 418}${voffset 1}IO WAIT\n"
+        new_block = "${goto 370}${voffset 4}${color1}disk writes${alignr 30}${diskio_write}\n${goto 370}${color1}disk reads${alignr 30}${diskio_read}\n${font Michroma:size=10}${color0}${goto 418}${voffset 1}DISK IO\n"
     ioconf.append(new_block)
 
     log.info('Writing IO conky config in config file')
