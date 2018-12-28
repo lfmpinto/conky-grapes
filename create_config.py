@@ -27,16 +27,18 @@ import platform
 import re
 from collections import OrderedDict
 import sys
-from os.path import expanduser
+import os
 import logging as log
 
 # Inittiating variables
-home = expanduser("~")
-working_dir = home+'/conky-grapes/'
-src_lua = working_dir+'rings-v2_tpl'
-dest_lua = working_dir+'rings-v2_gen.lua'
-src_conky = working_dir+'conky_tpl'
-dest_conky = working_dir+'conky_gen.conkyrc'
+try:
+    working_dir = os.environ['CONKY_REPO']
+except KeyError:
+    working_dir = os.environ['PWD']
+src_lua = working_dir+'/rings-v2_tpl'
+dest_lua = working_dir+'/rings-v2_gen.lua'
+src_conky = working_dir+'/conky_tpl'
+dest_conky = working_dir+'/conky_gen.conkyrc'
 
 # Defaults is blue metrics and white font
 ## blue     | 34cdff
@@ -134,6 +136,7 @@ def write_conf_blank(src, dest):
     filedata = filedata.replace('--{{ COLOR0 }}', "    color0 = '{}',".format(ctitle))
     filedata = filedata.replace('--{{ COLOR1 }}', "    color1 = '{}',".format(ctext))
     filedata = filedata.replace('--{{ FONTTEXT }}', "    font = 'Play:normal:size={}',".format(ctextsize))
+    filedata = filedata.replace('--{{ CONKY_REPO }}', working_dir)
 
     write_conf(filedata, dest)
 
@@ -335,7 +338,7 @@ def write_fsconf_lua(disk, cpunb):
         fsconf_lua.append(new_block)
         # for DISK_WATCH section
         index = index_start + cpt
-        with open(working_dir+'fs_watch') as f:
+        with open(working_dir+'/fs_watch') as f:
             for line in f:
                 test = re.sub(r'FILESYS', data['arg'], line)
                 fsconf_watch.append(re.sub(r'INDEX', format(index), test))
@@ -600,7 +603,7 @@ def write_netconf_conky(interface):
     if interface[0] == "no_gateway_interface":
         log.warning('No default route on the system! Tachikoma, what is happening?!')
 
-        with open(working_dir+'nonetconf') as f:
+        with open(working_dir+'/nonetconf') as f:
             for line in f:
                 netconf.append(line)
         log.info('Writing NETWORK conky config in config file')
@@ -611,11 +614,11 @@ def write_netconf_conky(interface):
     elif interface[1] is True:
         log.info('Setting up Wifi as main interface')
         if old:
-            with open(working_dir+'wificonf_old') as f:
+            with open(working_dir+'/wificonf_old') as f:
                 for line in f:
                     netconf.append(re.sub(r'INTERFACE', interface[0], line))
         else:
-            with open(working_dir+'wificonf') as f:
+            with open(working_dir+'/wificonf') as f:
                 for line in f:
                     netconf.append(re.sub(r'INTERFACE', interface[0], line))
 
@@ -626,11 +629,11 @@ def write_netconf_conky(interface):
     else:
         log.info('Setting up NIC as main interface')
         if old:
-            with open(working_dir+'ethconf_old') as f:
+            with open(working_dir+'/ethconf_old') as f:
                 for line in f:
                     netconf.append(re.sub(r'INTERFACE', interface[0], line))
         else:
-            with open(working_dir+'ethconf') as f:
+            with open(working_dir+'/ethconf') as f:
                 for line in f:
                     netconf.append(re.sub(r'INTERFACE', interface[0], line))
 
@@ -664,7 +667,7 @@ if __name__ == "__main__":
 #    print ("called directly")
     print ("Digging in the system to gather info...\n")
 
-    parser = argparse.ArgumentParser(description='Creates/overwrites conky and lua configuration for conky-grapes adjustments to your system.')
+    parser = argparse.ArgumentParser(description='Creates/overwrites conky and lua configuration for conky-grapes adjustments to your system. The environment variable CONKY_REPO is required to be set otherwise it will use the current running directory by default (PWD).')
     parser.add_argument('-ri', '--color_rings', dest='rings', metavar='COLOR_RINGS',
                         default='blue', choices=couleurs,
                         help='the textual color for the rings and titles, among: {0}'
